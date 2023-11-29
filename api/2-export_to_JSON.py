@@ -1,27 +1,35 @@
 #!/usr/bin/python3
-''' Test request to parse API's
-'''
-
-
-import csv
+"""
+Using a REST API and an EMP_ID, save info about their TODO list in a json file
+"""
 import json
 import requests
 import sys
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1].isdigit():
-        api_endpoint = "https://jsonplaceholder.typicode.com"
-        user_id = sys.argv[1]
-        user_data = requests.get(api_endpoint + "/users/" + user_id).json()
-        username = user_data.get('username')
-        todo_data = \
-            requests.get(api_endpoint + "/users/" + user_id + "/todos").\
-            json()
-        with open("{}.json".format(user_id), 'w') as json_file:
-            tasks = []
-            for task in todo_data:
-                tasks.append({'task': task['title'],
-                              'completed': task['completed'],
-                              'username': username})
-            data = {"{}".format(user_id): tasks}
-            json.dump(data, json_file)
+    """ Main section """
+    BASE_URL = 'https://jsonplaceholder.typicode.com'
+    employee_id = sys.argv[1] if len(sys.argv) > 1 else None
+
+    if not employee_id:
+        print("Please provide an employee ID as an argument.")
+        sys.exit(1)
+
+    employee = requests.get(f"{BASE_URL}/users/{employee_id}/").json()
+    employee_name = employee.get("username")
+    emp_todos = requests.get(f"{BASE_URL}/users/{employee_id}/todos").json()
+    serialized_todos = []
+
+    for todo in emp_todos:
+        serialized_todos.append({
+            "task": todo.get("title"),
+            "completed": todo.get("completed"),
+            "username": employee_name
+        })
+
+    output_data = {employee_id: serialized_todos}
+
+    with open(f"{employee_id}.json", 'w') as file:
+        json.dump(output_data, file, indent=4)
+
+    print(f"Tasks for employee {employee_id} exported to {file_name}.")
